@@ -1,0 +1,412 @@
+Rangkuman Diskusi
+1. Arah awal: Autonomous Vehicle / Robotaxi
+
+Kita membahas kemungkinan topik penelitian yang berada di antara:
+
+Autonomous vehicle
+Robotaxi
+Passenger application
+Fleet Management
+MaaS
+MQTT
+C-V2X
+Network/communication architecture
+
+Fokus akhirnya mengarah ke sistem pendukung autonomous robotaxi, bukan pengembangan autonomous driving stack seperti SLAM, perception, atau control.
+
+2. Passenger Application vs Fleet Management
+Passenger Application
+
+Digunakan oleh penumpang untuk:
+
+menentukan pickup
+menentukan destination
+request ride
+melihat posisi kendaraan
+melihat ETA
+cancel trip
+emergency
+
+Contoh:
+
+Passenger
+    ↓
+Passenger App
+    ↓
+Ride Request
+Fleet Management / Dispatch
+
+Digunakan oleh operator/sistem untuk:
+
+menerima passenger request
+menentukan kendaraan
+menentukan pickup/drop-off point
+membuat mission
+monitoring kendaraan
+mengatur perjalanan
+Passenger App
+       ↓
+Fleet / Dispatch
+       ↓
+Autonomous Vehicle
+
+Karena Anda hanya memiliki 1 autonomous car, istilah Fleet Management menjadi agak terlalu luas. Kita kemudian mengarah ke Dispatch and Trip Management.
+
+3. MaaS
+
+Mobility-as-a-Service (MaaS) adalah platform yang mengintegrasikan layanan transportasi ke dalam satu sistem.
+
+Contohnya:
+
+                MaaS
+                 │
+       ┌─────────┼─────────┐
+       ↓         ↓         ↓
+      Bus       MRT     Robotaxi
+
+Passenger application dapat menjadi interface MaaS.
+
+Namun untuk skripsi Anda, MaaS dianggap terlalu luas jika mencakup seluruh transportasi, payment, public transport, dll.
+
+Karena itu MaaS lebih cocok sebagai konteks, bukan fokus utama.
+
+4. MQTT
+
+Kita membahas bahwa MQTT yang digunakan pada autonomous vehicle pada dasarnya adalah MQTT yang sama dengan IoT.
+
+Perbedaannya berada pada konteks dan requirement.
+
+Contoh:
+
+IoT:
+Sensor → MQTT → Broker → Cloud
+
+Robotaxi:
+Robotaxi → MQTT → Broker → Dispatch/Fleet Manager
+
+MQTT cocok untuk:
+
+telemetry
+vehicle status
+mission/event
+command
+cloud communication
+
+Sedangkan komunikasi internal autonomous vehicle seperti:
+
+Perception → Planning → Control
+
+lebih cocok menggunakan ROS 2/DDS.
+
+5. C-V2X
+
+C-V2X (Cellular Vehicle-to-Everything) adalah teknologi komunikasi kendaraan berbasis cellular.
+
+Dua konsep utamanya:
+
+Vehicle ↔ Cellular Network ↔ Cloud
+              (V2N)
+
+Vehicle ↔ Vehicle
+Vehicle ↔ Infrastructure
+Vehicle ↔ Pedestrian
+              (PC5)
+
+C-V2X dapat digunakan untuk komunikasi autonomous vehicle dengan:
+
+cloud
+fleet manager
+kendaraan lain
+infrastructure
+
+Tetapi kita belum menjadikannya fokus skripsi.
+
+6. Dispatch
+
+Dispatch adalah proses menentukan bagaimana passenger request dilayani oleh kendaraan.
+
+Contoh:
+
+Passenger
+Pickup: A
+Destination: B
+       │
+       ▼
+Dispatch System
+       │
+       ▼
+Autonomous Car
+       │
+       ▼
+A → B
+
+Dengan banyak kendaraan, dispatch dapat berarti vehicle assignment.
+
+Dengan satu kendaraan, fokusnya berubah menjadi:
+
+Apakah kendaraan tersedia, menerima request, membuat mission, dan menjalankan perjalanan.
+
+7. Pickup & Drop-off Point
+
+Kita juga membahas bahwa posisi pickup/drop-off tidak harus persis sama dengan koordinat yang diberikan penumpang.
+
+Misalnya:
+
+Passenger GPS
+     ↓
+   Mall
+     ↓
+Safe Pickup Point
+
+Dispatch system dapat menentukan titik yang feasible berdasarkan:
+
+road network
+posisi kendaraan
+accessible road
+stopping area
+geofence
+safety
+
+Begitu juga destination:
+
+Destination
+     ↓
+Drop-off Point
+     ↓
+Safe/legal stopping area
+
+Pembagian tanggung jawab yang kita dapatkan:
+
+Dispatch = WHAT & WHERE
+
+Autonomous Vehicle = HOW
+
+Artinya dispatch menentukan:
+
+Pickup = A
+Drop-off = B
+Mission = A → B
+
+Sedangkan autonomous vehicle menentukan bagaimana bergerak dari A ke B menggunakan navigation/planning yang sudah tersedia.
+
+8. Rebalancing
+
+Awalnya kita membahas:
+
+Dispatch + Rebalancing Fleet
+
+Rebalancing berarti memindahkan kendaraan kosong ke lokasi yang diperkirakan memiliki demand.
+
+Contoh:
+
+Demand tinggi
+      ↓
+   Zone A
+
+Robotaxi kosong
+      ↓
+Robotaxi → Zone A
+
+Tetapi karena Anda hanya memiliki 1 autonomous car, kita menyimpulkan bahwa fleet rebalancing bukan fokus yang ideal.
+
+Konsep yang masih bisa digunakan adalah:
+
+Post-trip repositioning
+
+Misalnya setelah perjalanan selesai:
+
+Trip selesai
+     ↓
+Vehicle berada di B
+     ↓
+Apakah perlu reposition?
+     ↓
+Zone A / Wait
+
+Namun ini bukan kontribusi utama.
+
+9. Judul yang akhirnya dipilih
+
+Kita akhirnya mengarah pada:
+
+Rancang Bangun Sistem Dispatch dan Manajemen Perjalanan pada Autonomous Robotaxi
+
+Judul ini lebih sesuai dengan kondisi Anda karena:
+
+memiliki 1 autonomous car
+mobil sudah fully autonomous
+tidak perlu membuat autonomous driving system
+fokus pada software/system architecture
+bisa mengintegrasikan passenger request
+bisa menggunakan MQTT
+bisa terhubung langsung ke kendaraan nyata
+10. Arsitektur sistem yang kita bayangkan
+                  Passenger
+                     │
+                     ▼
+              Passenger App
+                     │
+                Ride Request
+                     │
+                     ▼
+            ┌──────────────────┐
+            │ Dispatch System  │
+            │                  │
+            │ Request Manager  │
+            │ Trip Manager     │
+            │ Vehicle Manager  │
+            │ Pickup Selector  │
+            │ Dropoff Selector │
+            └────────┬─────────┘
+                     │
+                 MQTT / API
+                     │
+                     ▼
+              Autonomous Car
+                     │
+              ┌──────┴──────┐
+              │             │
+           ROS 2       Navigation
+              │             │
+              └──────┬──────┘
+                     │
+                Vehicle State
+                     │
+                     ▼
+               Dispatch System
+11. State machine kendaraan
+
+Kita juga membentuk konsep state:
+
+             ┌──────────┐
+             │   IDLE   │
+             └────┬─────┘
+                  │
+             New Request
+                  ↓
+            ┌──────────┐
+            │ ASSIGNED │
+            └────┬─────┘
+                 ↓
+            ┌──────────┐
+            │  PICKUP  │
+            └────┬─────┘
+                 ↓
+            ┌──────────┐
+            │ ON TRIP  │
+            └────┬─────┘
+                 ↓
+            ┌──────────┐
+            │ DROPOFF  │
+            └────┬─────┘
+                 ↓
+             ┌───────┐
+             │ IDLE  │
+             └───────┘
+
+Ini penting untuk trip management.
+
+12. Paper yang sudah kita temukan
+
+Beberapa paper yang relevan:
+
+Hyland & Mahmassani
+
+Dynamic Autonomous Vehicle Fleet Operations: Optimization-Based Strategies to Assign AVs to Immediate Traveler Demand Requests
+
+Fokus:
+
+passenger demand
+AV assignment
+dispatch
+waiting time
+vehicle utilization
+
+Ini menjadi basis untuk dispatch.
+
+Duan et al.
+
+Centralized and Decentralized Autonomous Dispatching Strategy for Dynamic Autonomous Taxi Operation in Hybrid Request Mode
+
+Fokus:
+
+autonomous taxi
+dynamic request
+dispatch
+assignment
+routing
+
+Ini menjadi basis untuk autonomous taxi dispatch.
+
+Real-time dispatch management — 2024
+
+Real-time dispatch management of shared autonomous vehicles with on-demand and pre-booked requests
+
+Fokus:
+
+real-time dispatch
+on-demand request
+pre-booked request
+vehicle allocation
+
+Relevan untuk request management.
+
+Tavor & Raviv
+
+Anticipatory Rebalancing of RoboTaxi Systems
+
+Fokus:
+
+RoboTaxi
+dispatch
+rebalancing
+passenger waiting time
+empty vehicle distance
+
+Lebih relevan jika nanti penelitian dikembangkan menjadi multi-vehicle.
+
+13. Scope skripsi yang paling masuk akal
+
+Untuk kondisi Anda, scope idealnya:
+
+Input
+Passenger Request
+├── Pickup
+└── Destination
+Processing
+Dispatch System
+├── Vehicle availability
+├── Pickup point selection
+├── Drop-off point selection
+├── Mission generation
+└── Trip state management
+Communication
+Dispatch ↔ Autonomous Car
+          MQTT / API
+Output
+Autonomous Car
+├── Go to pickup
+├── Pickup passenger
+├── Navigate to destination
+└── Drop-off passenger
+Evaluation
+
+Bisa diuji dengan:
+
+request response time
+communication latency
+mission execution success
+pickup accuracy
+trip completion
+MQTT QoS
+packet loss
+connection recovery
+Kesimpulan
+
+Arah penelitian yang sudah terbentuk adalah:
+
+Passenger Request → Dispatch → Pickup/Drop-off Selection → Mission → Autonomous Vehicle → Trip Management
+
+Dengan 1 autonomous car sebagai real-world testbed.
+
+Jadi Anda tidak perlu membuat "fleet" dalam arti banyak kendaraan. Sistem Anda lebih tepat disebut Dispatch and Trip Management System for Autonomous Robotaxi, sementara konsep fleet management dan paper fleet-operation menjadi landasan teoritis.
